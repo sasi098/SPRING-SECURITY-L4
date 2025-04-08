@@ -1,0 +1,47 @@
+✅ Step-by-Step: Request to Response Lifecycle (How it works)
+📥 Incoming HTTP Request
+A client sends a request (e.g., GET /demo) with an x-api-key header.
+
+🔐 SecurityConfig (FilterChain Setup)
+SecurityConfig adds a custom filter (ApiKeyFilter) before the standard BasicAuthenticationFilter.
+
+The secret API key is injected from application.properties as @Value("${the.secret}").
+
+🚦 ApiKeyFilter (Custom Filter)
+Intercepts all HTTP requests.
+
+Extracts x-api-key header from the request.
+
+If the key is missing or "null", it passes the request forward without authentication.
+
+Otherwise:
+
+Wraps the key in an ApiKeyAuthentication object (a custom implementation of Authentication).
+
+Passes it to the custom AuthenticationManager (CustomAuthenticationManager).
+
+✅ CustomAuthenticationManager
+It receives the Authentication object and delegates to the ApiKeyAuthenticationProvider if the type is supported.
+
+This decouples the logic of manager and actual credential validation.
+
+🔎 ApiKeyAuthenticationProvider
+Checks if the provided key matches the expected value (the.secret).
+
+If it matches:
+
+Marks the Authentication as authenticated.
+
+Returns it to the filter.
+
+If not:
+
+Throws BadCredentialsException, leading to a 401 Unauthorized.
+
+🛡️ SecurityContextHolder
+If authentication succeeds, the filter sets the SecurityContextHolder with the authenticated user.
+
+Now the request is considered authenticated and proceeds to the controller.
+
+🎯 Controller Execution
+If authenticated, the request hits the controller (/demo returns "Demo!").
